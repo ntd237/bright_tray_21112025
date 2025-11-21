@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "sync_mode": true,
+  "global_brightness": 50,
+  "per_monitor": {},
+  "auto_start": true,
+  "last_monitors": []
+}
