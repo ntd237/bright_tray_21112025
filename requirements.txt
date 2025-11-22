@@ -1,22 +1,18 @@
-# DDC/CI Control - Điều khiển độ sáng màn hình qua DDC/CI protocol
-# (DDC/CI Control - Monitor brightness control via DDC/CI protocol)
-monitorcontrol>=4.1.0
+# Core dependencies cho brightness control
+monitorcontrol>=4.1.0     # DDC/CI protocol cho external monitors
+screen-brightness-control>=0.21.0  # WMI fallback cho laptop screens
 
 # System Tray - Tạo icon và menu trong system tray
-# (System Tray - Create icon and menu in system tray)
 pystray>=0.19.0
 
-# Image Processing - Tạo icon động cho tray
-# (Image Processing - Create dynamic tray icon)
+# Image Processing - Tạo icon động cho tray  
 Pillow>=10.0.0
 
 # Windows API - Gọi các Windows API (Registry, WM_DISPLAYCHANGE, WMI)
-# (Windows API - Call Windows APIs: Registry, WM_DISPLAYCHANGE, WMI)
 pywin32>=306
 
 # Config Directory - Cross-platform config directory paths
 appdirs>=1.4.4
 
 # Build Tool - Đóng gói thành .exe
-# (Build Tool - Package as .exe)
 pyinstaller>=6.0.0

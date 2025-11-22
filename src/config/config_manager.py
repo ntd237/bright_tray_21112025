@@ -1,6 +1,5 @@
 """
 Configuration Manager - Quản lý cấu hình người dùng
-(Configuration Manager - User configuration management)
 """
 
 import json
@@ -14,11 +13,9 @@ from appdirs import user_config_dir
 class ConfigManager:
     """
     Quản lý việc lưu/đọc cấu hình người dùng.
-    (Manage saving/loading user configuration)
     """
     
     # Tham số cấu hình cố định ở đầu file
-    # (Fixed configuration parameters at top of file)
     CONFIG_VERSION = "1.0"
     DEFAULT_SYNC_MODE = True
     DEFAULT_GLOBAL_BRIGHTNESS = 50
@@ -26,27 +23,22 @@ class ConfigManager:
     
     def __init__(self):
         """
-        Khởi tạo ConfigManager.
-        (Initialize ConfigManager)
+        Khởi tạo ConfigManager
         """
         self.logger = logging.getLogger("BrightTray.ConfigManager")
         
         # Xác định đường dẫn config file
-        # (Determine config file path)
         self.config_dir = Path(user_config_dir("BrightTray", "ntd237"))
         self.config_file = self.config_dir / "config.json"
         
         # Template mặc định
-        # (Default template)
         self.template_path = Path(__file__).parent.parent.parent / "resources" / "config_template.json"
         
         # Timer cho debouncing
-        # (Timer for debouncing)
         self._save_timer: Optional[threading.Timer] = None
         self._lock = threading.Lock()
         
         # Load config khi khởi tạo
-        # (Load config on initialization)
         self.config = self.load_config()
         
         self.logger.info(f"ConfigManager initialized. Config file: {self.config_file}")
@@ -54,28 +46,23 @@ class ConfigManager:
     def load_config(self) -> Dict[str, Any]:
         """
         Đọc cấu hình từ file. Tạo mới nếu không tồn tại.
-        (Read configuration from file. Create new if doesn't exist)
         
         Returns:
             Dictionary chứa cấu hình
-            (Dictionary containing configuration)
         """
         try:
             # Nếu file config tồn tại, đọc nó
-            # (If config file exists, read it)
             if self.config_file.exists():
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                 
                 # Validate và migrate nếu cần
-                # (Validate and migrate if needed)
                 config = self._validate_and_migrate(config)
                 
                 self.logger.info("Config loaded successfully")
                 return config
             else:
                 # Tạo config mới từ template
-                # (Create new config from template)
                 self.logger.info("Config file not found. Creating new config from template.")
                 return self._create_default_config()
                 
@@ -86,14 +73,11 @@ class ConfigManager:
     def _create_default_config(self) -> Dict[str, Any]:
         """
         Tạo cấu hình mặc định.
-        (Create default configuration)
         
         Returns:
             Dictionary cấu hình mặc định
-            (Default configuration dictionary)
         """
         # Đọc từ template nếu có
-        # (Read from template if available)
         try:
             if self.template_path.exists():
                 with open(self.template_path, 'r', encoding='utf-8') as f:
@@ -114,27 +98,22 @@ class ConfigManager:
     def _validate_and_migrate(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """
         Validate và migrate config cũ sang version mới nếu cần.
-        (Validate and migrate old config to new version if needed)
         
         Args:
-            config: Config hiện tại (Current config)
+            config: Config hiện tại
             
         Returns:
             Config đã được validated/migrated
-            (Validated/migrated config)
         """
         # Kiểm tra version
-        # (Check version)
         config_version = config.get("version", "0.0")
         
         if config_version != self.CONFIG_VERSION:
             self.logger.info(f"Migrating config from version {config_version} to {self.CONFIG_VERSION}")
             # TODO: Thêm migration logic khi có version mới
-            # (TODO: Add migration logic when new version exists)
             config["version"] = self.CONFIG_VERSION
         
         # Đảm bảo các field bắt buộc tồn tại
-        # (Ensure required fields exist)
         default_config = self._create_default_config()
         for key in default_config:
             if key not in config:
@@ -146,20 +125,17 @@ class ConfigManager:
     def save_config(self, debounce: bool = True):
         """
         Lưu cấu hình vào file. Có thể debounce để tránh ghi quá nhiều.
-        (Save configuration to file. Can debounce to avoid excessive writes)
         
         Args:
-            debounce: Có dùng debouncing không (Whether to use debouncing)
+            debounce: Có dùng debouncing không
         """
         with self._lock:
             # Hủy timer cũ nếu có
-            # (Cancel old timer if exists)
             if self._save_timer is not None:
                 self._save_timer.cancel()
             
             if debounce:
                 # Tạo timer mới
-                # (Create new timer)
                 self._save_timer = threading.Timer(
                     self.DEBOUNCE_SECONDS,
                     self._write_config_to_file
@@ -167,21 +143,17 @@ class ConfigManager:
                 self._save_timer.start()
             else:
                 # Lưu ngay lập tức
-                # (Save immediately)
                 self._write_config_to_file()
     
     def _write_config_to_file(self):
         """
         Ghi config vào file (internal method).
-        (Write config to file - internal method)
         """
         try:
             # Tạo thư mục nếu chưa tồn tại
-            # (Create directory if doesn't exist)
             self.config_dir.mkdir(parents=True, exist_ok=True)
             
             # Ghi file
-            # (Write file)
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(self.config, f, indent=2, ensure_ascii=False)
             
@@ -195,19 +167,17 @@ class ConfigManager:
     def get(self, key: str, default: Any = None) -> Any:
         """
         Lấy giá trị config theo key.
-        (Get config value by key)
         """
         return self.config.get(key, default)
     
     def set(self, key: str, value: Any, save: bool = True):
         """
         Đặt giá trị config và tự động lưu.
-        (Set config value and auto-save)
         
         Args:
-            key: Key cần set (Key to set)
-            value: Giá trị mới (New value)
-            save: Có lưu ngay không (Whether to save immediately)
+            key: Key cần set
+            value: Giá trị mới
+            save: Có lưu ngay không
         """
         self.config[key] = value
         if save:
@@ -227,12 +197,12 @@ class ConfigManager:
     
     @property
     def global_brightness(self) -> int:
-        """Độ sáng toàn cục (Global brightness)"""
+        """Độ sáng toàn cục"""
         return self.config.get("global_brightness", self.DEFAULT_GLOBAL_BRIGHTNESS)
     
     @global_brightness.setter
     def global_brightness(self, value: int):
-        """Set độ sáng toàn cục (Set global brightness)"""
+        """Set độ sáng toàn cục"""
         # Validate range
         value = max(0, min(100, value))
         self.set("global_brightness", value)
@@ -240,14 +210,12 @@ class ConfigManager:
     def get_monitor_brightness(self, monitor_id: str) -> Optional[int]:
         """
         Lấy độ sáng của màn hình cụ thể.
-        (Get brightness of specific monitor)
         """
         return self.config.get("per_monitor", {}).get(monitor_id)
     
     def set_monitor_brightness(self, monitor_id: str, value: int):
         """
         Lưu độ sáng của màn hình cụ thể.
-        (Save brightness of specific monitor)
         """
         # Validate range
         value = max(0, min(100, value))
@@ -260,7 +228,7 @@ class ConfigManager:
     
     @property
     def auto_start(self) -> bool:
-        """Auto-start enabled hay không (Whether auto-start is enabled)"""
+        """Auto-start enabled hay không"""
         return self.config.get("auto_start", False)
     
     @auto_start.setter

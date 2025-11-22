@@ -1,6 +1,5 @@
 """
 System Tray Icon - Giao diện system tray
-(System Tray Icon - System tray interface)
 """
 
 import logging
@@ -14,7 +13,6 @@ from pystray import MenuItem as Item, Menu
 class TrayIcon:
     """
     Quản lý system tray icon và menu.
-    (Manage system tray icon and menu)
     """
     
     # Preset brightness levels - Các mức độ sáng preset
@@ -23,7 +21,6 @@ class TrayIcon:
     def __init__(self, controller, monitor_manager, config_manager, auto_start_manager):
         """
         Khởi tạo TrayIcon.
-        (Initialize TrayIcon)
         
         Args:
             controller: Instance của BrightnessController
@@ -42,7 +39,6 @@ class TrayIcon:
         self.icon: Optional[pystray.Icon] = None
         
         # Đường dẫn icon
-        # (Icon path)
         self.icon_path = Path(__file__).parent.parent.parent / "resources" / "icon.png"
         
         self.logger.info("TrayIcon initialized")
@@ -50,7 +46,6 @@ class TrayIcon:
     def create_icon_image(self) -> Image.Image:
         """
         Tạo icon cho system tray.
-        (Create icon for system tray)
         
         Returns:
             PIL Image object
@@ -59,7 +54,6 @@ class TrayIcon:
             if self.icon_path.exists():
                 image = Image.open(self.icon_path)
                 # Resize về 64x64 cho tray icon
-                # (Resize to 64x64 for tray icon)
                 image = image.resize((64, 64), Image.Resampling.LANCZOS)
                 return image
             else:
@@ -68,7 +62,6 @@ class TrayIcon:
             self.logger.error(f"Error loading icon: {e}. Using default.")
         
         # Fallback: tạo icon đơn giản
-        # (Fallback: create simple icon)
         image = Image.new('RGB', (64, 64), color='white')
         draw = ImageDraw.Draw(image)
         draw.ellipse([16, 16, 48, 48], fill='orange', outline='black')
@@ -77,7 +70,6 @@ class TrayIcon:
     def build_menu(self) -> Menu:
         """
         Tạo menu cho tray icon.
-        (Create menu for tray icon)
         
         Returns:
             pystray Menu object
@@ -99,42 +91,58 @@ class TrayIcon:
         # ===== BRIGHTNESS CONTROLS =====
         if sync_mode:
             # Sync mode: Chỉ hiện global brightness presets
-            # (Sync mode: Only show global brightness presets)
             global_brightness = self.config.global_brightness
             
             brightness_items = []
             for preset in self.BRIGHTNESS_PRESETS:
+                # Tạo closure function để bind preset value
+                def make_callback(value):
+                    def callback(icon, item):
+                        self.on_set_global_brightness(value)
+                    return callback
+                
+                def make_checked(value):
+                    def checked(item):
+                        return abs(self.config.global_brightness - value) < 5
+                    return checked
+                
                 brightness_items.append(Item(
                     f"{preset}%",
-                    lambda _, p=preset: self.on_set_global_brightness(p),
-                    checked=lambda item, p=preset: abs(self.config.global_brightness - p) < 5
+                    make_callback(preset),
+                    checked=make_checked(preset)
                 ))
             
-            menu_items.append(Menu("Global Brightness", Menu(*brightness_items)))
+            menu_items.append(Item("Global Brightness", Menu(*brightness_items)))
         else:
             # Individual mode: Hiện submenu cho từng màn hình
-            # (Individual mode: Show submenu for each monitor)
             for monitor in monitors:
                 if monitor.supports_brightness:
                     monitor_items = []
                     
                     # Lấy brightness hiện tại
-                    # (Get current brightness)
                     current_brightness = self.config.get_monitor_brightness(monitor.id) or 50
                     
                     for preset in self.BRIGHTNESS_PRESETS:
+                        # Tạo closure functions
+                        def make_monitor_callback(mon_id, value):
+                            def callback(icon, item):
+                                self.on_set_monitor_brightness(mon_id, value)
+                            return callback
+                        
+                        def make_monitor_checked(mon_id, value):
+                            def checked(item):
+                                return abs((self.config.get_monitor_brightness(mon_id) or 50) - value) < 5
+                            return checked
+                        
                         monitor_items.append(Item(
                             f"{preset}%",
-                            lambda _, mid=monitor.id, p=preset: self.on_set_monitor_brightness(mid, p),
-                            checked=lambda item, mid=monitor.id, p=preset: abs(
-                                (self.config.get_monitor_brightness(mid) or 50) - p
-                            ) < 5
+                            make_monitor_callback(monitor.id, preset),
+                            checked=make_monitor_checked(monitor.id, preset)
                         ))
                     
-                    menu_items.append(Menu(str(monitor), Menu(*monitor_items)))
+                    menu_items.append(Item(str(monitor), Menu(*monitor_items)))
                 else:
                     # Màn hình không hỗ trợ brightness control
-                    # (Monitor doesn't support brightness control)
                     menu_items.append(Item(
                         f"{monitor.name} [No DDC/CI]",
                         lambda _: None,
@@ -163,7 +171,6 @@ class TrayIcon:
     def rebuild_menu(self):
         """
         Rebuild menu (gọi khi có thay đổi màn hình).
-        (Rebuild menu - called when monitors change)
         """
         if self.icon:
             self.logger.info("Rebuilding tray menu...")
@@ -175,32 +182,27 @@ class TrayIcon:
     def on_toggle_sync(self, icon, item):
         """
         Xử lý khi toggle sync mode.
-        (Handle sync mode toggle)
         """
         new_state = not self.controller.sync_mode
         self.controller.toggle_sync_mode(new_state)
         self.logger.info(f"Sync mode toggled to: {new_state}")
         
         # Rebuild menu để update UI
-        # (Rebuild menu to update UI)
         self.rebuild_menu()
     
     def on_set_global_brightness(self, value: int):
         """
         Xử lý khi set global brightness.
-        (Handle set global brightness)
         """
         self.logger.info(f"User set global brightness to {value}%")
         self.controller.set_global_brightness(value)
         
         # Update menu để hiển thị checkmark mới
-        # (Update menu to show new checkmark)
         self.rebuild_menu()
     
     def on_set_monitor_brightness(self, monitor_id: str, value: int):
         """
         Xử lý khi set brightness cho màn hình cụ thể.
-        (Handle set brightness for specific monitor)
         """
         self.logger.info(f"User set brightness for {monitor_id} to {value}%")
         self.controller.set_monitor_brightness(monitor_id, value)
@@ -211,7 +213,6 @@ class TrayIcon:
     def on_toggle_autostart(self, icon, item):
         """
         Xử lý khi toggle auto-start.
-        (Handle auto-start toggle)
         """
         current_state = self.auto_start_manager.is_enabled()
         new_state = not current_state
@@ -237,13 +238,11 @@ class TrayIcon:
     def on_about(self, icon, item):
         """
         Hiển thị About dialog.
-        (Show About dialog)
         """
         import pystray
         from pystray import MenuItem as Item
         
         # Sử dụng notification thay vì dialog (vì pystray không có native dialog)
-        # (Use notification instead of dialog - pystray doesn't have native dialog)
         if hasattr(icon, 'notify'):
             icon.notify(
                 "BrightTray v1.0.0\n\n"
@@ -263,7 +262,6 @@ class TrayIcon:
         self.logger.info("User requested exit")
         
         # Lưu config cuối cùng
-        # (Save final config)
         self.config.save_config(debounce=False)
         
         # Stop monitor listener
@@ -275,12 +273,17 @@ class TrayIcon:
     def run(self):
         """
         Chạy tray icon (blocking).
-        (Run tray icon - blocking)
         """
         # Tạo icon
         # (Create icon)
         image = self.create_icon_image()
         menu = self.build_menu()
+        
+        # NOTE: pystray trên Windows:
+        # - Right-click: Luôn show menu
+        # - Left-click: Trigger default item (nếu có)
+        # Để force left-click cũng show menu, cần workaround phức tạp (win32 API hook)
+        # Tạm thời: accept right-click để show menu (standard Windows UX)
         
         self.icon = pystray.Icon(
             "BrightTray",
@@ -290,6 +293,7 @@ class TrayIcon:
         )
         
         self.logger.info("Starting tray icon...")
+        self.logger.info("USAGE: Right-click icon để mở menu (Left-click sẽ được implement)")
         
         # Run (blocking call)
         self.icon.run()

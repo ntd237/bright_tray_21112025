@@ -1,9 +1,7 @@
 """
 Build Script - Đóng gói ứng dụng thành .exe
-(Build Script - Package application as .exe)
 
 Chạy script này để build .exe với PyInstaller:
-(Run this script to build .exe with PyInstaller:)
 
     python build.py
 
@@ -18,7 +16,6 @@ from pathlib import Path
 def build():
     """
     Build .exe sử dụng PyInstaller.
-    (Build .exe using PyInstaller)
     """
     print("=" * 60)
     print("Building BrightTray.exe...")
@@ -42,11 +39,9 @@ def build():
         f'--add-data=resources;resources',
         
         # Icon (nếu có .ico file, uncomment dòng dưới)
-        # (Icon - if .ico file exists, uncomment below)
         # f'--icon={icon_file}',
         
         # Ẩn imports để PyInstaller detect
-        # (Hidden imports for PyInstaller detection)
         '--hidden-import=win32api',
         '--hidden-import=win32con',
         '--hidden-import=win32gui',

@@ -3,7 +3,6 @@ BrightTray - Monitor Brightness Control via System Tray
 Main Entry Point
 
 Công cụ điều khiển độ sáng màn hình qua System Tray
-(Monitor brightness control tool via System Tray)
 
 Author: ntd237
 Version: 1.0.0
@@ -14,7 +13,6 @@ import logging
 from pathlib import Path
 
 # Add src to path để có thể import modules
-# (Add src to path to import modules)
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from src.utils.logger import setup_logger
@@ -29,7 +27,6 @@ from src.utils.auto_start import AutoStartManager
 def main():
     """
     Entry point chính của ứng dụng.
-    (Main entry point of the application)
     """
     # Setup logging
     logger = setup_logger("BrightTray", level=logging.INFO)
@@ -93,7 +90,6 @@ def main():
         logger.info("Application shutting down...")
         
         # Cleanup code đã được handle trong tray.on_exit()
-        # (Cleanup code already handled in tray.on_exit())
         
         logger.info("Shutdown complete")
         return 0
